@@ -103,7 +103,7 @@ internal class PropsFiller<C : Component.Builder<*>>(
             })
             for (suffix in arrayOf("Left", "Right", "Top", "Bottom")) {
                 val name = prefix + suffix
-                val edge = YogaEdge.valueOf(suffix.toUpperCase(Locale.getDefault()))
+                val edge = YogaEdge.valueOf(suffix.uppercase(Locale.getDefault()))
                 register(name, object : PropFiller<C, Float> {
                     override fun fill(
                         c: C,

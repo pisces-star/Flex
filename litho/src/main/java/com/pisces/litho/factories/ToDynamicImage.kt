@@ -12,7 +12,7 @@ internal object ToDynamicImage : ToComponent<DynamicImage.Builder>() {
             enum("scaleType", DynamicImage.Builder::scaleType)
             value("blurRadius", DynamicImage.Builder::blurRadius)
             value("blurSampling", DynamicImage.Builder::blurSample)
-            value("aspectRatio", DynamicImage.Builder::imageAspectRatio)
+            value("aspectRatio", DynamicImage.Builder::aspectRatio)
             pt("borderLeftTopRadius", DynamicImage.Builder::leftTopRadius)
             pt("borderRightTopRadius", DynamicImage.Builder::rightTopRadius)
             pt("borderRightBottomRadius", DynamicImage.Builder::rightBottomRadius)

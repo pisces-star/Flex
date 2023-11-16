@@ -2,6 +2,7 @@ package com.pisces.core.build
 
 import android.content.Context
 import androidx.annotation.RestrictTo
+import com.pisces.core.BuildConfig
 import com.pisces.core.TemplateNode
 import com.pisces.core.context.PropsContext
 import com.pisces.core.eventsystem.EventTarget

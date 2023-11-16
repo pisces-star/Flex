@@ -1,82 +1,141 @@
 package com.pisces.litho.widget
 
+import android.content.Context
+import android.view.View
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.facebook.litho.Component
 import com.facebook.litho.ComponentContext
-import com.facebook.litho.ComponentScope
-import com.facebook.litho.KComponent
-import com.facebook.litho.sections.widget.RecyclerCollectionEventsController
-import com.facebook.litho.sections.widget.ViewPagerComponent
+import com.facebook.litho.SizeSpec.EXACTLY
+import com.facebook.litho.SizeSpec.getSize
+import com.facebook.litho.SizeSpec.makeSizeSpec
+import com.facebook.litho.TouchEvent
+import com.facebook.litho.annotations.*
+import com.facebook.litho.sections.SectionContext
+import com.facebook.litho.sections.common.DataDiffSection
+import com.facebook.litho.sections.common.RenderEvent
+import com.facebook.litho.sections.widget.*
+import com.facebook.litho.widget.ComponentRenderInfo
+import com.facebook.litho.widget.LinearLayoutInfo
+import com.facebook.litho.widget.LithoRecyclerView.TouchInterceptor
+import com.facebook.litho.widget.RenderInfo
 import com.facebook.litho.widget.SnapUtil.SNAP_TO_CENTER
 import com.pisces.core.enums.Orientation
 
-class Pager private constructor(private var data: List<Component> = emptyList()) : KComponent() {
-    override fun ComponentScope.render(): Component? {
-        return ViewPagerComponent.create<Component>(context)
+
+@Suppress("DEPRECATION")
+@LayoutSpec
+object PagerSpec {
+    @OnCreateLayout
+    fun onCreateLayout(
+        context: ComponentContext,
+        @Prop(optional = true)
+        circular: Boolean = true,
+        @Prop(optional = true)
+        timeSpan: Float = 1.0f,
+        @Prop(optional = true)
+        orientation: Orientation = Orientation.HORIZONTAL,
+        @Prop(optional = true)
+        indicatorEnable: Boolean = false,
+        @Prop(optional = true)
+        indicatorSize: Int = 0,
+        @Prop(optional = true)
+        indicatorHeight: Float = 5.0f,
+        @Prop(optional = true)
+        indicatorSelected: String?,
+        @Prop(optional = true)
+        indicatorUnselected: String,
+        @Prop(varArg = "child")
+        children: List<Component>
+    ): Component {
+        return ViewPagerComponent.create<Model>(context)
             .initialPageIndex(0)
+            .dataDiffSection(
+                buildDataDiffSection(context, children)
+            )
             .eventsController(RecyclerCollectionEventsController().apply {
                 setSnapMode(SNAP_TO_CENTER)
             })
             .build()
     }
 
-    class Builder internal constructor(
-        context: ComponentContext,
-        defStyleAttr: Int,
-        defStyleRes: Int,
-        component: Pager
-    ) : DefaultComponentBuilder<Pager>(context, defStyleAttr, defStyleRes, component) {
+    private fun buildDataDiffSection(context: ComponentContext, children: List<Component>): DataDiffSection<Model>? {
+        val dataDiffSection = DataDiffSection.create<Model>(SectionContext(context))
+            .data(children.map { Model(it) })
+            .renderEventHandler(Pager.onRenderEvent(context))
+            .build()
 
-        fun isCircular(isCircular: Boolean) = apply {
-
-        }
-
-        fun indicatorEnable(enable: Boolean) = apply {
-
-        }
-
-        fun children(children: List<Component>) = apply {
-        }
-
-        fun timeSpan(interval: Long) = apply {
-
-        }
-
-        fun orientation(orientation: Orientation) = apply {
-
-        }
-
-        fun indicatorSize(indicatorSize: Int) = apply {
-
-        }
-
-        fun indicatorHeight(indicatorHeight: Int) = apply {
-
-        }
-
-        fun indicatorSelected(selected: String) = apply {
-
-        }
-
-        fun indicatorUnselected(unselected: String) = apply {
-
-        }
-
+        return dataDiffSection as DataDiffSection<Model>?
     }
 
-    companion object {
-        @JvmStatic
-        fun create(context: ComponentContext?): Builder =
-            create(context, 0, 0)
+    @OnEvent(RenderEvent::class)
+    fun onRenderEvent(context: ComponentContext?, @FromEvent model: Model): RenderInfo {
+        return ComponentRenderInfo.create()
+            .component(model.content)
+            .build()
+    }
 
-        @JvmStatic
-        @JvmOverloads
-        fun create(
-            context: ComponentContext?,
-            defStyleAttr: Int = 0,
-            defStyleRes: Int = 0
-        ): Builder {
-            val pager = Pager()
-            return Builder(requireNotNull(context), defStyleAttr, defStyleRes, pager)
+
+    class Model(
+        val content: Component
+    )
+
+    @OnCreateLayout
+    fun <T> onCreateLayout(
+        c: ComponentContext?,
+        @Prop dataDiffSection: DataDiffSection<T>?,
+        @Prop(optional = true) eventsController: RecyclerCollectionEventsController?,
+        @Prop(optional = true) initialPageIndex: Int,
+        @Prop(optional = true) disableSwiping: Boolean
+    ): Component {
+        val recyclerConfiguration: RecyclerConfiguration = ListRecyclerConfiguration.create()
+            .recyclerBinderConfiguration(RecyclerBinderConfiguration.create()
+                .isCircular(true)
+                .build())
+            .orientation(LinearLayoutManager.HORIZONTAL)
+            .snapMode(SNAP_TO_CENTER)
+            .linearLayoutInfoFactory { context, orientation, reverseLayout, stackFromEnd ->
+                ViewPagerLinearLayoutInfo(
+                    context,
+                    orientation,
+                    reverseLayout
+                )
+            }
+            .build()
+        val builder = RecyclerCollectionComponent.create(c)
+            .flexGrow(1f)
+            .disablePTR(true)
+            .section(
+                ViewPagerHelperSection.create<T>(SectionContext(c))
+                    .delegateSection(dataDiffSection)
+                    .pageSelectedEventEventHandler(
+                        ViewPagerComponent.getPageSelectedEventHandler(c)
+                    )
+                    .initialPageIndex(initialPageIndex)
+            )
+            .eventsController(eventsController)
+            .recyclerConfiguration(recyclerConfiguration)
+        if (disableSwiping) {
+            // Consume the touch event before it can get to the RV to disable swiping, and also disable
+            // the RV's normal touchIntercept behavior by ignoring onInterceptTouchEvent.
+            builder
+                .touchInterceptor { recyclerView, ev -> TouchInterceptor.Result.IGNORE_TOUCH_EVENT }
+                .recyclerTouchEventHandler(ViewPagerComponent.onSwipeDisabledTouchEvent(c))
+        }
+        return builder.build()
+    }
+
+    @OnEvent(TouchEvent::class)
+    fun onSwipeDisabledTouchEvent(c: ComponentContext?, @FromEvent view: View?): Boolean {
+        return true
+    }
+
+    /** Custom implementation of LinearLayout to assign parent's width to items.  */
+    private class ViewPagerLinearLayoutInfo(context: Context?, orientation: Int, reverseLayout: Boolean) :
+        LinearLayoutInfo(context, orientation, reverseLayout) {
+        override fun getChildWidthSpec(widthSpec: Int, renderInfo: RenderInfo): Int {
+            val hscrollWidth = getSize(widthSpec)
+            return makeSizeSpec(hscrollWidth, EXACTLY)
         }
     }
+
 }

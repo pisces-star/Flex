@@ -14,7 +14,7 @@ object LithoBuildTool : BuildTool() {
         val arr = arrayOf(
             "Empty" to ToWidget(Empty, ToEmpty),
             "Flex" to ToWidget(Flex, ToFlex),
-            "Banner" to ToWidget(Pager, ToPager),
+            "Pager" to ToWidget(Pager, ToPager),
             "Image" to ToWidget(Image, ToImage),
             "Scroller" to ToWidget(Scroller, ToScroller),
             "TextInput" to ToWidget(TextInput, ToTextInput),

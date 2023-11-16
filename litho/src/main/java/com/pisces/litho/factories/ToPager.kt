@@ -10,7 +10,7 @@ import com.pisces.litho.widget.Pager
 internal object ToPager : ToComponent<Pager.Builder>() {
     override val propsFiller by PropsFiller
         .create<Pager.Builder>(CommonProps) {
-            bool("isCircular", Pager.Builder::isCircular)
+            bool("isCircular", Pager.Builder::circular)
             bool("indicatorEnable", Pager.Builder::indicatorEnable)
             value("timeSpan", Pager.Builder::timeSpan)
             enum("orientation", Pager.Builder::orientation)
