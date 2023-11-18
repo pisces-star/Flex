@@ -7,6 +7,7 @@ import com.pisces.core.build.*
 import com.pisces.litho.drawable.load.DrawableLoader
 import com.pisces.litho.factories.*
 import com.pisces.litho.widget.ComponentTreePool
+import com.pisces.litho.widget.Stack
 
 object LithoBuildTool : BuildTool() {
 
@@ -14,6 +15,7 @@ object LithoBuildTool : BuildTool() {
         val arr = arrayOf(
             "Empty" to ToWidget(Empty, ToEmpty),
             "Flex" to ToWidget(Flex, ToFlex),
+            "Stack" to ToWidget(CommonDefine, ToStack),
             "Pager" to ToWidget(Pager, ToPager),
             "Image" to ToWidget(Image, ToImage),
             "Scroller" to ToWidget(Scroller, ToScroller),
