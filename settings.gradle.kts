@@ -17,3 +17,4 @@ rootProject.name = "Flex"
 include(":app")
 include(":core")
 include(":litho")
+include(":compiler")
