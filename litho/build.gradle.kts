@@ -35,13 +35,13 @@ dependencies {
 
     implementation ("com.facebook.yoga:yoga:2.0.0")
     implementation ("com.facebook.yoga:proguard-annotations:1.19.0")
-    implementation ("com.facebook.fresco:fresco:3.1.1")
+    implementation ("com.facebook.fresco:fresco:3.1.3")
 
     // Litho
     implementation ("com.facebook.litho:litho-core:0.48.0")
     implementation ("com.facebook.litho:litho-core-kotlin:0.48.0")
-    implementation ("com.facebook.litho:litho-widget:0.48.0")
-    implementation ("com.facebook.litho:litho-widget-kotlin:0.48.0")
+    api ("com.facebook.litho:litho-widget:0.48.0")
+    api ("com.facebook.litho:litho-widget-kotlin:0.48.0")
     implementation("com.facebook.litho:litho-fresco:0.48.0")
     kapt ("com.facebook.litho:litho-processor:0.48.0")
     // SoLoader

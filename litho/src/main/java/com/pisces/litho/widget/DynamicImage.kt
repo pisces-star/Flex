@@ -8,38 +8,76 @@ import com.facebook.litho.ComponentContext
 import com.facebook.litho.annotations.LayoutSpec
 import com.facebook.litho.annotations.OnCreateLayout
 import com.facebook.litho.annotations.Prop
+import com.facebook.litho.annotations.PropDefault
 import com.facebook.litho.fresco.FrescoImage
+import com.pisces.core.enums.ScaleType
+import com.pisces.core.enums.ScaleType.*
 
 @Suppress("DEPRECATION")
 @LayoutSpec
 object DynamicImageSpec {
+    @PropDefault
+    val scaleType: ScaleType = CENTER_CROP
+
+    @PropDefault
+    val aspectRatio: Float = 1.0f
+
+    @PropDefault
+    val blurRadius: Float = 0f
+
+    @PropDefault
+    val blurSample: Float = 0f
+
+    @PropDefault
+    val leftTopRadius: Float = 0f
+
+    @PropDefault
+    val rightTopRadius: Float = 0f
+
+    @PropDefault
+    val rightBottomRadius: Float = 0f
+
+    @PropDefault
+    val leftBottomRadius: Float = 0f
+
+
     @OnCreateLayout
     fun onCreateLayout(
         context: ComponentContext,
         @Prop(optional = true)
-        scaleType: ScalingUtils.ScaleType = ScalingUtils.ScaleType.CENTER,
+        scaleType: ScaleType,
         @Prop(optional = true, isCommonProp = true)
-        aspectRatio: Float = 1.0f,
+        aspectRatio: Float,
         @Prop
-        url: Any = "",
+        url: Any,
         @Prop(optional = true)
-        blurRadius: Float = 0f,
+        blurRadius: Float,
         @Prop(optional = true)
-        blurSample: Float = 0f,
+        blurSample: Float,
         @Prop(optional = true)
-        leftTopRadius: Float = 0f,
+        leftTopRadius: Float,
         @Prop(optional = true)
-        rightTopRadius: Float = 0f,
+        rightTopRadius: Float,
         @Prop(optional = true)
-        rightBottomRadius: Float = 0f,
+        rightBottomRadius: Float,
         @Prop(optional = true)
-        leftBottomRadius: Float = 0f
+        leftBottomRadius: Float
     ): Component {
         val controller = Fresco.newDraweeControllerBuilder()
             .setUri(url.toString())
             .build()
+
+        val frescoScaleType = when (scaleType) {
+            FIT_XY -> ScalingUtils.ScaleType.FIT_XY
+            FIT_START -> ScalingUtils.ScaleType.FIT_START
+            FIT_CENTER -> ScalingUtils.ScaleType.FIT_CENTER
+            FIT_END -> ScalingUtils.ScaleType.FIT_END
+            CENTER -> ScalingUtils.ScaleType.CENTER
+            CENTER_CROP -> ScalingUtils.ScaleType.CENTER_CROP
+            CENTER_INSIDE -> ScalingUtils.ScaleType.CENTER_INSIDE
+        }
         return FrescoImage.create(context)
-            .actualImageScaleType(scaleType)
+            .actualImageScaleType(frescoScaleType)
             .imageAspectRatio(aspectRatio)
             .roundingParams(
                 RoundingParams.fromCornersRadii(

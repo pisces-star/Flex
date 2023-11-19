@@ -6,6 +6,7 @@ import androidx.annotation.AnyThread
 import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
 import com.facebook.litho.*
+import com.facebook.litho.config.ComponentsConfiguration
 import com.facebook.rendercore.RunnableHandler
 import com.pisces.core.TemplateNode
 import com.pisces.core.eventsystem.EventDispatcher
@@ -119,10 +120,15 @@ class TemplatePage @WorkerThread internal constructor(
         private val context: ComponentContext
     ) : ComponentTree.Builder(context) {
 
+        init {
+            componentsConfiguration(ComponentsConfiguration.getDefaultComponentsConfiguration())
+        }
+
         @JvmSynthetic
         @JvmField
         @RestrictTo(RestrictTo.Scope.LIBRARY)
         internal var template: TemplateNode? = null
+
         @JvmSynthetic
         @JvmField
         @RestrictTo(RestrictTo.Scope.LIBRARY)

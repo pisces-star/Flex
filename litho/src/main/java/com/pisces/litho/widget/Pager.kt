@@ -6,6 +6,7 @@ import android.os.Looper
 import android.view.View
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView.OnScrollListener
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.facebook.litho.*
 import com.facebook.litho.annotations.*
@@ -19,9 +20,10 @@ import com.facebook.litho.widget.ComponentRenderInfo
 import com.facebook.litho.widget.LinearLayoutInfo
 import com.facebook.litho.widget.RenderInfo
 import com.facebook.litho.widget.SnapUtil
-import com.facebook.yoga.YogaPositionType
+import com.pisces.core.context.PropsContext.Functions.Resource
 import com.pisces.core.enums.Orientation
 import com.pisces.core.enums.PagerStyle
+import com.pisces.litho.toPx
 
 
 @Suppress("DEPRECATION")
@@ -46,6 +48,30 @@ object PagerSpec {
     @PropDefault
     val orientation: Orientation = Orientation.HORIZONTAL
 
+    @PropDefault
+    val indicatorEnable: Boolean = false
+
+    @PropDefault
+    val indicatorSize: Int = 5.toPx()
+
+    @PropDefault
+    val indicatorHeight: Int = 5.toPx()
+
+    @PropDefault
+    val indicatorSelected: String = Resource.drawable("indicator_light")
+
+    @PropDefault
+    val indicatorUnselected: String = Resource.drawable("indicator_black")
+
+    @PropDefault
+    val indicatorMargin: Int = 2.5f.toPx()
+
+    @PropDefault
+    val delayTime: Float = 2f
+
+    @PropDefault
+    val timeSpan: Float = 2f
+
     @OnCreateLayout
     fun onCreateLayout(
         context: ComponentContext,
@@ -60,13 +86,15 @@ object PagerSpec {
         @Prop(optional = true)
         indicatorEnable: Boolean,
         @Prop(optional = true)
-        indicatorSize: Int = 0,
+        indicatorSize: Int,
         @Prop(optional = true)
-        indicatorHeight: Float,
+        indicatorHeight: Int,
         @Prop(optional = true)
         indicatorSelected: String,
         @Prop(optional = true)
         indicatorUnselected: String,
+        @Prop(optional = true)
+        indicatorMargin: Int,
         @Prop(varArg = "child")
         children: List<Component>,
         @Prop(optional = true)
@@ -75,8 +103,7 @@ object PagerSpec {
         @State eventsController: RecyclerCollectionEventsController
     ): Component {
         return if (indicatorEnable) {
-            Column.create(context)
-                .positionType(YogaPositionType.ABSOLUTE)
+            Stack.create(context)
                 .child(
                     buildRecycler(
                         context,
@@ -115,9 +142,10 @@ object PagerSpec {
             .disablePTR(true)
             .section(buildDataDiffSection(style, context, children, selectedIndex))
             .eventsController(eventsController)
-            .visibleHandler(Pager.onVisibleEvent(context))
-            .invisibleHandler(Pager.onInvisibleEvent(context))
-            .fullImpressionHandler(Pager.onFullImpressionVisibleEvent(context))
+            .visibilityChangedHandler(Pager.onVisibilityChanged(context))
+            .touchHandler(Pager.onSwipeDisabledTouchEvent(context))
+            .onScrollListener(object : OnScrollListener() {
+            })
             .recyclerConfiguration(recyclerConfiguration)
             .build()
     }
@@ -141,7 +169,7 @@ object PagerSpec {
         return ListRecyclerConfiguration.create()
             .orientation(LinearLayoutManager.HORIZONTAL)
             .snapMode(SnapUtil.SNAP_TO_CENTER)
-            .recyclerBinderConfiguration(buildRecyclerBinderConfiguration(isCircular))
+            .recyclerBinderConfiguration(buildRecyclerBinderConfiguration(isCircular = isCircular))
             .linearLayoutInfoFactory { context, orientation, reverseLayout, stackFromEnd ->
                 ViewPagerLinearLayoutInfo(
                     context,
@@ -159,9 +187,9 @@ object PagerSpec {
     ): ListRecyclerConfiguration {
         return ListRecyclerConfiguration.create()
             .orientation(if (orientation == Orientation.HORIZONTAL) LinearLayoutManager.HORIZONTAL else LinearLayoutManager.VERTICAL)
-            .snapMode(SnapUtil.SNAP_TO_CENTER_CHILD_WITH_CUSTOM_SPEED)
+            .snapMode(SnapUtil.SNAP_NONE)
             .recyclerBinderConfiguration(
-                buildRecyclerBinderConfiguration(isCircular)
+                buildRecyclerBinderConfiguration(isCircular = isCircular)
             )
             .build()
     }
@@ -173,10 +201,10 @@ object PagerSpec {
     ): GridRecyclerConfiguration {
         return GridRecyclerConfiguration.create()
             .orientation(if (orientation == Orientation.HORIZONTAL) GridLayoutManager.HORIZONTAL else GridLayoutManager.VERTICAL)
-            .snapMode(SnapUtil.SNAP_TO_CENTER_CHILD_WITH_CUSTOM_SPEED)
+            .snapMode(SnapUtil.SNAP_NONE)
             .numColumns(numColumns)
             .recyclerBinderConfiguration(
-                buildRecyclerBinderConfiguration(isCircular, true)
+                buildRecyclerBinderConfiguration(dynamicHeight = true)
             )
             .build()
     }
@@ -188,16 +216,15 @@ object PagerSpec {
     ): StaggeredGridRecyclerConfiguration {
         return StaggeredGridRecyclerConfiguration.create()
             .orientation(if (orientation == Orientation.HORIZONTAL) StaggeredGridLayoutManager.HORIZONTAL else StaggeredGridLayoutManager.VERTICAL)
-            .snapMode(SnapUtil.SNAP_TO_CENTER_CHILD_WITH_CUSTOM_SPEED)
             .numSpans(numColumns)
             .recyclerBinderConfiguration(
-                buildRecyclerBinderConfiguration(isCircular)
+                buildRecyclerBinderConfiguration()
             )
             .build()
     }
 
     private fun buildRecyclerBinderConfiguration(
-        isCircular: Boolean,
+        isCircular: Boolean = false,
         dynamicHeight: Boolean = false
     ): RecyclerBinderConfiguration {
         return RecyclerBinderConfiguration.create()
@@ -212,19 +239,18 @@ object PagerSpec {
         children: List<Component>,
         initialPageIndex: Int
     ): Section {
-
         val dataDiffSection = DataDiffSection.create<Model>(SectionContext(context))
             .data(children.map { Model(it) })
-            .renderEventHandler(Pager.onRenderEvent(context))
+            .renderEventHandler(Pager.onRender(context))
             .build()
 
         return when (style) {
             PagerStyle.VIEW_PAGER -> ViewPagerHelperSection.create<Model>(SectionContext(context))
                 .delegateSection(dataDiffSection as DataDiffSection<Model>?)
                 .pageSelectedEventEventHandler(
-                    Pager.onPageSelectedEvent(context)
+                    Pager.onPageSelected(context)
                 )
-                .initialPageIndex(initialPageIndex)
+//                .initialPageIndex(initialPageIndex)
                 .build()
 
             else -> dataDiffSection
@@ -236,82 +262,79 @@ object PagerSpec {
         context: ComponentContext,
         handler: StateValue<Handler>,
         runnable: StateValue<Runnable>,
+        looperRunnable: StateValue<Runnable>,
         selectedIndex: StateValue<Int>,
-        eventsController: StateValue<RecyclerCollectionEventsController>
+        eventsController: StateValue<RecyclerCollectionEventsController>,
+        @Prop(varArg = "child")
+        children: List<Component>
     ) {
-        Handler(Looper.getMainLooper()).also { handler.set(it) }
+        val internalHandler = Handler(Looper.getMainLooper()).also { handler.set(it) }
         val controller = RecyclerCollectionEventsController().also { eventsController.set(it) }
-        Runnable { controller.requestScrollToNextPosition(true) }.also { runnable.set(it) }
+        Runnable { controller.requestScrollToPosition(children.lastIndex, true) }.also { runnable.set(it) }
+        val internalLooperRunnable = object : Runnable {
+            override fun run() {
+                controller.requestScrollToNextPosition(true)
+                internalHandler.postDelayed(this, (timeSpan * 1000L).toLong())
+            }
+        }
+        looperRunnable.set(internalLooperRunnable)
         selectedIndex.set(0)
     }
 
-    @OnEvent(VisibleEvent::class)
-    fun onVisibleEvent(
+    @OnEvent(VisibilityChangedEvent::class)
+    fun onVisibilityChanged(
         context: ComponentContext,
-        @Prop(optional = true)
-        timeSpan: Float,
+        @FromEvent percentVisibleWidth: Float,
+        @FromEvent percentVisibleHeight: Float,
+        @State handler: Handler,
+        @State runnable: Runnable,
+        @State looperRunnable: Runnable,
         @State
         eventsController: RecyclerCollectionEventsController,
-        @State
-        handler: Handler,
-        @State
-        runnable: Runnable
-    ) {
-        if (timeSpan != 0f) {
-            eventsController.recyclerView?.stopScroll()
-            handler.removeCallbacks(runnable)
-        }
-    }
-
-    @OnEvent(FullImpressionVisibleEvent::class)
-
-    fun onFullImpressionVisibleEvent(
-        context: ComponentContext,
+        @Prop(varArg = "child")
+        children: List<Component>,
         @Prop(optional = true)
-        timeSpan: Float,
-        @State
-        eventsController: RecyclerCollectionEventsController,
-        @State
-        handler: Handler,
-        @State
-        runnable: Runnable,
+        style: PagerStyle,
         @Prop(optional = true)
         autoScroll: Boolean,
         @Prop(optional = true)
-        style: PagerStyle,
+        timeSpan: Float,
+        @Prop(optional = true)
+        delayTime: Float
     ) {
         if (autoScroll && style != PagerStyle.VIEW_PAGER) {
-            handler.postDelayed(runnable, (timeSpan * 1000L).toLong())
+            if (percentVisibleHeight == 100f && percentVisibleWidth == 100f) {
+                handler.postDelayed(runnable, (delayTime * 1000L).toLong())
+            } else {
+                eventsController.recyclerView?.stopScroll()
+                handler.removeCallbacks(runnable)
+            }
         }
+
+        if (timeSpan != 0f && style == PagerStyle.VIEW_PAGER) {
+            if (percentVisibleHeight > 0f || percentVisibleWidth > 0f && children.size > 1) {
+                handler.postDelayed(looperRunnable, (timeSpan * 1000L).toLong())
+            } else {
+                eventsController.recyclerView?.stopScroll()
+                handler.removeCallbacks(looperRunnable)
+            }
+        }
+
     }
 
-    @OnEvent(InvisibleEvent::class)
-    fun onInvisibleEvent(
-        context: ComponentContext,
-        @Prop(optional = true)
-        timeSpan: Float,
-        @State
-        handler: Handler,
-        @State
-        runnable: Runnable
-    ) {
-        if (timeSpan != 0f) {
-            handler.postDelayed(runnable, (timeSpan * 1000L).toLong())
-        }
-    }
 
     @OnEvent(PageSelectedEvent::class)
-    fun onPageSelectedEvent(context: ComponentContext, @FromEvent selectedPageIndex: Int) {
+    fun onPageSelected(context: ComponentContext, @FromEvent selectedPageIndex: Int) {
         Pager.updateSelectedIndex(context, selectedPageIndex)
     }
 
     @OnUpdateState
     fun updateSelectedIndex(selectedIndex: StateValue<Int>, @Param indexedValue: Int) {
-        selectedIndex.set(indexedValue)
+//        selectedIndex.set(indexedValue)
     }
 
     @OnEvent(RenderEvent::class)
-    fun onRenderEvent(context: ComponentContext?, @FromEvent model: Model): RenderInfo {
+    fun onRender(context: ComponentContext?, @FromEvent model: Model): RenderInfo {
         return ComponentRenderInfo.create()
             .component(model.content)
             .build()
