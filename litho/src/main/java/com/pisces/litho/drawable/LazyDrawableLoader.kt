@@ -10,7 +10,7 @@ import java.lang.reflect.Field
 import java.util.concurrent.atomic.AtomicBoolean
 
 internal abstract class LazyDrawableLoader
-    : ComparableDrawableWrapper(NoOpDrawable()) {
+    : DrawableWrapper(),ComparableDrawable {
 
     private val isInit = AtomicBoolean(false)
 

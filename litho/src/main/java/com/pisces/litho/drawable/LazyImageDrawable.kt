@@ -23,7 +23,7 @@ class LazyImageDrawable private constructor(
     private val context: Context,
     private val model: Any,
     private val radius: CornerRadius
-) : ComparableDrawableWrapper(NoOpDrawable()) {
+) : DrawableWrapper(), ComparableDrawable {
 
     constructor(
         context: Context,
