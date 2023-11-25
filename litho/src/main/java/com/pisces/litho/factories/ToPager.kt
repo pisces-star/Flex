@@ -6,20 +6,13 @@ import com.pisces.litho.Widget
 import com.pisces.litho.factories.filler.PropsFiller
 import com.pisces.litho.widget.Pager
 
-
-internal object ToPager : ToComponent<Pager.Builder>() {
-    override val propsFiller by PropsFiller
-        .create<Pager.Builder>(CommonProps) {
-            bool("circular", Pager.Builder::circular)
-            bool("enableScroll", Pager.Builder::enableScroll)
-            bool("autoScroll", Pager.Builder::autoScroll)
-            enum("style", Pager.Builder::pagerStyle)
+internal object ToPager:ToComponent<Pager.Builder>() {
+    override val propsFiller: PropsFiller<Pager.Builder>
+        by PropsFiller.create {
+            bool("isCircular",Pager.Builder::isCircular)
+            bool("disableSwiping",Pager.Builder::disableSwiping)
             enum("orientation", Pager.Builder::orientation)
-            pt("verticalSpace", Pager.Builder::verticalSpace)
-            pt("horizontalSpace", Pager.Builder::horizontalSpace)
-            value("columns", Pager.Builder::columns)
-            value("delayTime", Pager.Builder::delayTime)
-            value("timeSpan", Pager.Builder::timeSpan)
+            value("timeSpan",Pager.Builder::timeSpan)
             bool("indicatorEnable", Pager.Builder::indicatorEnable)
             pt("indicatorHeight", Pager.Builder::indicatorHeight)
             pt("indicatorWidth", Pager.Builder::indicatorWidth)
@@ -30,11 +23,7 @@ internal object ToPager : ToComponent<Pager.Builder>() {
             text("indicatorUnselected", Pager.Builder::indicatorUnselected)
         }
 
-    override fun create(
-        c: ComponentContext,
-        visibility: Boolean,
-        attrs: PropSet
-    ): Pager.Builder {
+    override fun create(c: ComponentContext, visibility: Boolean, attrs: PropSet): Pager.Builder {
         return Pager.create(c)
     }
 
@@ -46,5 +35,4 @@ internal object ToPager : ToComponent<Pager.Builder>() {
     ) {
         owner.children(children)
     }
-
 }

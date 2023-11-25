@@ -1,6 +1,6 @@
 package com.pisces.core.enums
 
-enum class PagerStyle {
+enum class RecyclerStyle {
     LIST,
     GRID,
     VIEW_PAGER,
