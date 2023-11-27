@@ -40,7 +40,7 @@ class Indicator(
                 for (index in 0 until indicatorCount) {
                     child(
                         Image(
-                            drawable = if (index == selectedIndex.value) indicatorSelectedDrawable else indicatorSelectedDrawable,
+                            drawable = if (index == selectedIndex.value % indicatorCount) indicatorSelectedDrawable else indicatorSelectedDrawable,
                             style = Style.height(indicatorHeight.px).width(indicatorWidth.px)
                                 .margin(horizontal = (indicatorSpace / 2).px)
                         )

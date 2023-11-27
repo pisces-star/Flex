@@ -10,7 +10,7 @@ import com.facebook.litho.annotations.OnCreateLayout
 import com.facebook.litho.annotations.Prop
 import com.facebook.litho.annotations.PropDefault
 import com.facebook.litho.flexbox.positionType
-import com.facebook.rendercore.primitives.ExactSizeConstraintsLayoutBehavior
+import com.facebook.rendercore.primitives.FillLayoutBehavior
 import com.facebook.rendercore.primitives.Primitive
 import com.facebook.rendercore.primitives.ViewAllocator
 import com.facebook.yoga.YogaPositionType
@@ -169,19 +169,19 @@ class PrimitivePager(
         override fun onPageSelected(position: Int) {
             super.onPageSelected(position)
             index = position
-            selectedCallback?.invoke(position % children.size)
+            selectedCallback?.invoke(position)
         }
     }
     private val PrimitiveComponentScope.pagerPrimitive
         get() =
             Primitive(
-                layoutBehavior = ExactSizeConstraintsLayoutBehavior,
+                layoutBehavior = FillLayoutBehavior(1080, 240),
                 mountBehavior =
                 MountBehavior(ViewAllocator { context -> ViewPager2(context) }) {
                     bind(disableSwiping, realOrientation, onPageChangeCallback, timeSpan) { pager ->
                         val looperRunnable = object : Runnable {
                             override fun run() {
-                                pager.setCurrentItem(index + 1, true)
+                                pager.currentItem = index + 1
                                 handler.postDelayed(this, timeSpan * 1000L)
                             }
 
