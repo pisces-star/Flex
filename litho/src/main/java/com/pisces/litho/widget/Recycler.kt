@@ -15,6 +15,7 @@ import com.facebook.litho.visibility.onVisibilityChanged
 import com.facebook.litho.widget.SnapUtil.SNAP_TO_CENTER
 import com.facebook.litho.widget.collection.*
 import com.facebook.rendercore.px
+import com.facebook.yoga.YogaAlign
 import com.facebook.yoga.YogaPositionType
 import com.pisces.core.context.PropsContext.Functions.Resource
 import com.pisces.core.enums.IndicatorType
@@ -256,7 +257,7 @@ object RecyclerSpec {
                 }
             }
             if (indicatorEnable) {
-                return Column(style = Style.positionType(YogaPositionType.RELATIVE)) {
+                return Column(alignItems = YogaAlign.CENTER, style = Style.positionType(YogaPositionType.RELATIVE)) {
                     child(pager)
                     child(
                         Indicator(
@@ -267,7 +268,7 @@ object RecyclerSpec {
                             indicatorType,
                             indicatorUnselected,
                             indicatorSelected,
-                            selectedIndex,
+                            selectedIndex.value,
                             components.size
                         )
                     )

@@ -25,7 +25,7 @@ class Indicator(
     private val indicatorType: IndicatorType = IndicatorType.OVAL,
     private val indicatorUnselected: String = "",
     private val indicatorSelected: String = "",
-    private val selectedIndex: State<Int>,
+    private val selectedIndex: Int,
     private val indicatorCount: Int
 ) : KComponent() {
     override fun ComponentScope.render(): Component? {
@@ -40,7 +40,7 @@ class Indicator(
                 for (index in 0 until indicatorCount) {
                     child(
                         Image(
-                            drawable = if (index == selectedIndex.value % indicatorCount) indicatorSelectedDrawable else indicatorSelectedDrawable,
+                            drawable = if (index == selectedIndex % indicatorCount) indicatorSelectedDrawable else indicatorSelectedDrawable,
                             style = Style.height(indicatorHeight.px).width(indicatorWidth.px)
                                 .margin(horizontal = (indicatorSpace / 2).px)
                         )

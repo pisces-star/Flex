@@ -13,6 +13,7 @@ import com.facebook.litho.flexbox.positionType
 import com.facebook.rendercore.primitives.FillLayoutBehavior
 import com.facebook.rendercore.primitives.Primitive
 import com.facebook.rendercore.primitives.ViewAllocator
+import com.facebook.yoga.YogaAlign
 import com.facebook.yoga.YogaPositionType
 import com.pisces.core.context.PropsContext
 import com.pisces.core.enums.IndicatorType
@@ -130,7 +131,7 @@ class KPager(
         }
 
         return if (indicatorEnable) {
-            Column(style = Style.positionType(YogaPositionType.RELATIVE)) {
+            Column(alignItems = YogaAlign.CENTER, style = Style.positionType(YogaPositionType.RELATIVE)) {
                 child(primitiveComponent)
                 child(
                     Indicator(
@@ -141,7 +142,7 @@ class KPager(
                         indicatorType,
                         indicatorUnselected,
                         indicatorSelected,
-                        selectedIndex,
+                        selectedIndex.value,
                         children.size
                     )
                 )
