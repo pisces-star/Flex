@@ -126,7 +126,7 @@ class KPager(
     override fun ComponentScope.render(): Component? {
         val selectedIndex = useState { 0 }
 
-        val primitiveComponent = PrimitivePager(isCircular, disableSwiping, orientation, timeSpan, children) {
+        val primitiveComponent = PrimitivePager(isCircular, disableSwiping, orientation, timeSpan, children,selectedIndex.value) {
             selectedIndex.update(it)
         }
 
@@ -158,10 +158,10 @@ class PrimitivePager(
     private val orientation: Orientation,
     private val timeSpan: Int,
     private val children: List<Component>,
+    private val initialPosition: Int,
     private val style: Style? = null,
     private val selectedCallback: ((Int) -> Unit)? = null
 ) : PrimitiveComponent() {
-    var index = 0
     private val handler by lazy { Handler(Looper.getMainLooper()) }
     private val realOrientation =
         if (orientation == Orientation.HORIZONTAL) ViewPager2.ORIENTATION_HORIZONTAL else ViewPager2.ORIENTATION_VERTICAL
@@ -169,7 +169,6 @@ class PrimitivePager(
     private val onPageChangeCallback = object : OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
             super.onPageSelected(position)
-            index = position
             selectedCallback?.invoke(position)
         }
     }
@@ -182,7 +181,7 @@ class PrimitivePager(
                     bind(disableSwiping, realOrientation, onPageChangeCallback, timeSpan) { pager ->
                         val looperRunnable = object : Runnable {
                             override fun run() {
-                                pager.currentItem = index + 1
+                                pager.setCurrentItem(pager.currentItem + 1,true)
                                 handler.postDelayed(this, timeSpan * 1000L)
                             }
 
@@ -191,6 +190,9 @@ class PrimitivePager(
                         pager.isUserInputEnabled = disableSwiping.not()
                         pager.registerOnPageChangeCallback(onPageChangeCallback)
                         pager.adapter = PagerAdapter(isCircular, children)
+                        if (pager.currentItem != initialPosition) {
+                            pager.setCurrentItem(initialPosition,false)
+                        }
 
                         if (timeSpan != 0 && children.size > 1) {
                             handler.postDelayed(looperRunnable, timeSpan * 1000L)
